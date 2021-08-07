@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CarDriver.Forms.Views.ManualDriverPage"
+             xmlns:vm="clr-namespace:CarDriver.Forms.ViewModels"
+             Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:ManualDriverViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Accent">#96d1ff</Color>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.Content>
+        <StackLayout>
+            <Label Text="{Binding LabelContent}"
+                Margin="10"
+                HorizontalOptions="CenterAndExpand" />
+            <Button Margin="10" Text="Click me!"
+                    Command="{Binding ClickCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
