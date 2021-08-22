@@ -31,10 +31,22 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Margin="0,10,0,0" Text="{Binding ButtonText}"
+            <!--<Button Margin="0,10,0,0" Text="{Binding ButtonText}"
                     Command="{Binding ScanCommand}"
                     BackgroundColor="{StaticResource Primary}"
                     TextColor="White" IsEnabled="{Binding ButtonEnabled}" />
+
+            <Button Margin="0,10,0,0" Text="List saved"
+                    Command="{Binding ListSavedCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White" />-->
+
+            <Button Margin="0,10,0,0" Text="Test transmit"
+                    Command="{Binding TestCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    IsEnabled="{Binding ButtonEnabled}"
+                    TextColor="White" />
+
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>
