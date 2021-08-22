@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -115,7 +116,7 @@ namespace CarDriver.Forms.ViewModels
 
         public void TransmitTest()
         {
-            var data = new[] {(byte) 'H', (byte) 'e', (byte) 'l', (byte) 'l', (byte) 'o', (byte) '!'};
+            var data = Encoding.ASCII.GetBytes($"Hello!{Environment.NewLine}");
 
             if (App.CurrentBluetoothConnection?.ConnectionState == ConnectionState.Connected)
             {

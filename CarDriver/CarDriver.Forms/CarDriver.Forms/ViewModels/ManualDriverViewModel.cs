@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Text;
 using System.Windows.Input;
 using CarDriver.Forms.CustomControls;
+using Plugin.BluetoothClassic.Abstractions;
 using Xamarin.Forms;
 
 namespace CarDriver.Forms.ViewModels
@@ -91,6 +93,13 @@ namespace CarDriver.Forms.ViewModels
 
             LeftPower = (int)Math.Round(leftPower * 2.5);
             RightPower = (int)Math.Round(rightPower * 2.5);
+
+            if (App.CurrentBluetoothConnection?.ConnectionState == ConnectionState.Connected)
+            {
+                App.CurrentBluetoothConnection.Transmit(Encoding.ASCII.GetBytes($"L{LeftPower}{Environment.NewLine}"));
+                App.CurrentBluetoothConnection.Transmit(Encoding.ASCII.GetBytes($"R{RightPower}{Environment.NewLine}"));
+            }
         }
+
     }
 }
