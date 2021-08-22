@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Xamarin.Forms;
+using CarDriver.Forms.ViewModels;
 
 namespace CarDriver.Forms.CustomControls
 {
@@ -12,6 +13,7 @@ namespace CarDriver.Forms.CustomControls
                 propertyName: "Xposition",
                 returnType: typeof(int),
                 declaringType: typeof(int),
+                defaultBindingMode: BindingMode.TwoWay,
                 defaultValue: 0
             );
 
@@ -26,13 +28,17 @@ namespace CarDriver.Forms.CustomControls
                 propertyName: "Yposition",
                 returnType: typeof(int),
                 declaringType: typeof(int),
+                defaultBindingMode: BindingMode.TwoWay,
                 defaultValue: 0
             );
 
         public int Yposition
         {
             get { return (int)GetValue(YpositionProperty); }
-            set { SetValue(YpositionProperty, value); }
+            set
+            {
+                SetValue(YpositionProperty, value);
+            }
         }
 
         public static readonly BindableProperty DistanceProperty =

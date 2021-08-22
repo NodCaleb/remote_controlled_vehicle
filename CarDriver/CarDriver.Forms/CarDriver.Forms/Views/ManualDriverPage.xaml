@@ -19,7 +19,7 @@
 
     <ContentPage.Content>
         <StackLayout>
-            <Label Text="{Binding LabelContent}"
+            <Label Text="{Binding Title}"
                 Margin="10"
                 HorizontalOptions="CenterAndExpand" />
             <Button Margin="10" Text="Click me!"
@@ -29,7 +29,10 @@
 
             <customControls:JoystickControl x:Name="JoystickControl" BackgroundColor="#ececec"
                                             HorizontalOptions="Center" VerticalOptions="Center" 
-                                            HeightRequest="250" WidthRequest="250"/>
+                                            HeightRequest="250" WidthRequest="250"
+                                            Xposition="{Binding Xposition}"
+                                            Yposition="{Binding Yposition}"
+                                            />
 
             <Grid BindingContext="{x:Reference Name=JoystickControl}">
                 <Grid.Resources>
@@ -48,11 +51,14 @@
                 <Label Text="Yposition" Grid.Row="1" Grid.Column="0"/>
                 <Label Text="{Binding Yposition}" Grid.Row="1" Grid.Column="1"/>
 
-                <Label Text="Distance" Grid.Row="2" Grid.Column="0"/>
-                <Label Text="{Binding Distance}" Grid.Row="2" Grid.Column="1"/>
+            </Grid>
 
-                <Label Text="Angle" Grid.Row="3" Grid.Column="0"/>
-                <Label Text="{Binding Angle}" Grid.Row="3" Grid.Column="1"/>
+            <Grid HorizontalOptions="Center" WidthRequest="250">
+                <Label Text="Left motor" Grid.Row="0" Grid.Column="0"/>
+                <Label Text="{Binding LeftPower}" Grid.Row="0" Grid.Column="1"/>
+
+                <Label Text="Right motor" Grid.Row="1" Grid.Column="0"/>
+                <Label Text="{Binding RightPower}" Grid.Row="1" Grid.Column="1"/>
 
             </Grid>
 
