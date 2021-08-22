@@ -15,21 +15,26 @@
                 HorizontalOptions="CenterAndExpand" />
 
             <ListView
+                x:Name="DevicesView"
                 ItemsSource="{Binding Devices}"
                 HorizontalOptions="CenterAndExpand"
                 VerticalOptions="CenterAndExpand"
                 >
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <TextCell Text="{Binding DisplayName}" />
+                        <ViewCell>
+                            <Button Text ="{Binding DisplayName}" 
+                                    Command="{Binding Path=BindingContext.ConnectCommand, Source={x:Reference DevicesView}}" 
+                                    CommandParameter="{Binding .}" />
+                        </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
 
             <Button Margin="0,10,0,0" Text="{Binding ButtonText}"
-                    Command="{Binding ConnectCommand}"
+                    Command="{Binding ScanCommand}"
                     BackgroundColor="{StaticResource Primary}"
-                    TextColor="White" />
+                    TextColor="White" IsEnabled="{Binding ButtonEnabled}" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>
