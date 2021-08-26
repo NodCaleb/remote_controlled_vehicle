@@ -30,8 +30,20 @@ namespace CarDriver.Forms
         {
             if (CurrentBluetoothConnection?.ConnectionState == ConnectionState.Connected)
             {
-                CurrentBluetoothConnection.Transmit(Encoding.ASCII.GetBytes($"L{LeftPower}{Environment.NewLine}"));
-                CurrentBluetoothConnection.Transmit(Encoding.ASCII.GetBytes($"R{RightPower}{Environment.NewLine}"));
+                var leftBytes = new byte[3];
+                var rightBytes = new byte[3];
+
+                leftBytes[0] = (byte)'L';
+                rightBytes[0] = (byte)'R';
+
+                leftBytes[1] = (byte)(LeftPower > 0 ? 'F' : 'B');
+                rightBytes[1] = (byte)(RightPower > 0 ? 'F' : 'B');
+
+                leftBytes[2] = (byte)(Math.Abs(LeftPower));
+                rightBytes[2] = (byte)(Math.Abs(RightPower));
+
+                CurrentBluetoothConnection.Transmit(leftBytes);
+                CurrentBluetoothConnection.Transmit(rightBytes);
             }
 
             Thread.Sleep(100);
