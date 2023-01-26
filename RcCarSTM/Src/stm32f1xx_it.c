@@ -202,10 +202,52 @@ void SysTick_Handler(void)
 /* USER CODE BEGIN 1 */
 void USART1_IRQHandler(void) {
 
-	uint8_t d = USART1->DR; // получить данное
-	//d++; //Just for fun :)
-	USART1->DR = d; // отослать данное назад
+	uint8_t d = USART1->DR; // get data
 
+	if ((d & 0x80) == 0x00) //msb == 0 - data for the left drive
+	{
+		leftDriveConfig = d;
+	}
+	else
+	{
+		rightDriveConfig = d;
+	}
+
+	//d++; //Just for fun :)
+	//USART1->DR = d; // отослать данное назад
+
+}
+
+void TIM1_UP_IRQHandler(void) {
+
+	//Left indicator (blue)
+	if ((leftDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+	{
+		if ((leftDriveConfig & 0x3F) > 0x20) //Is there enough power?
+		{
+			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
+		}
+		else
+		{
+			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
+		}
+	}
+
+	//Left indicator (red)
+	if ((rightDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+	{
+		if ((rightDriveConfig & 0x3F) > 0x20) //Is there enough power?
+		{
+			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_13);
+		}
+		else
+		{
+			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_13);
+		}
+	}
+
+    //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12); //blinking
+    LL_TIM_ClearFlag_UPDATE(TIM1);  // сброс флага прерывания
 }
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

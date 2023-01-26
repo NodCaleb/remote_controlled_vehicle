@@ -42,7 +42,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t leftDriveConfig = 0x00;
+uint8_t rightDriveConfig = 0x80;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -82,39 +83,57 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   // инициализация UART1
-      RCC->APB2ENR |= RCC_APB2ENR_USART1EN; // включаем тактирование UART1
+  RCC->APB2ENR |= RCC_APB2ENR_USART1EN; // включаем тактирование UART1
 
-      RCC->APB2ENR |= RCC_APB2ENR_IOPAEN; // разрешаем тактирование порта GPIOA
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN; // разрешаем тактирование порта GPIOA
 
-      // настройка вывода PA9 (TX1) на режим альтернативной функции с активным выходом
-      // Биты CNF = 10, ,биты MODE = X1
-      GPIOA->CRH &= (~GPIO_CRH_CNF9_0);
-      GPIOA->CRH |= (GPIO_CRH_CNF9_1 | GPIO_CRH_MODE9);
+  // настройка вывода PA9 (TX1) на режим альтернативной функции с активным выходом
+  // Биты CNF = 10, ,биты MODE = X1
+  GPIOA->CRH &= (~GPIO_CRH_CNF9_0);
+  GPIOA->CRH |= (GPIO_CRH_CNF9_1 | GPIO_CRH_MODE9);
 
-      // настройка вывода PA10 (RX1) на режим входа с подтягивающим резистором
-      // Биты CNF = 10, ,биты MODE = 00, ODR = 1
-      GPIOA->CRH &= (~GPIO_CRH_CNF10_0);
-      GPIOA->CRH |= GPIO_CRH_CNF10_1;
-      GPIOA->CRH &= (~(GPIO_CRH_MODE10));
-      GPIOA->BSRR |= GPIO_ODR_ODR10;
+  // настройка вывода PA10 (RX1) на режим входа с подтягивающим резистором
+  // Биты CNF = 10, ,биты MODE = 00, ODR = 1
+  GPIOA->CRH &= (~GPIO_CRH_CNF10_0);
+  GPIOA->CRH |= GPIO_CRH_CNF10_1;
+  GPIOA->CRH &= (~(GPIO_CRH_MODE10));
+  GPIOA->BSRR |= GPIO_ODR_ODR10;
 
-      // конфигурация UART1
-      USART1->CR1 = USART_CR1_UE; // разрешаем USART1, сбрасываем остальные биты
+  // конфигурация UART1
+  USART1->CR1 = USART_CR1_UE; // разрешаем USART1, сбрасываем остальные биты
 
-      USART1->BRR = 1875; // скорость 38400 бод
+  USART1->BRR = 1875; // скорость 38400 бод
 
-      USART1->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE; // разрешаем приемник, передатчик и прерывание по приему
-      USART1->CR2 = 0;
-      USART1->CR3 = 0;
+  USART1->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE; // разрешаем приемник, передатчик и прерывание по приему
+  USART1->CR2 = 0;
+  USART1->CR3 = 0;
 
-      NVIC_EnableIRQ (USART1_IRQn);
+  NVIC_EnableIRQ (USART1_IRQn);
+
+  // конфигурация таймера 1
+  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
+  LL_TIM_SetClockSource(TIM1, LL_TIM_CLOCKSOURCE_INTERNAL);
+
+  LL_TIM_EnableCounter(TIM1);  // разрешить счетчик 1
+  LL_TIM_SetCounterMode(TIM1, LL_TIM_COUNTERMODE_UP);  // прямой счет
+  LL_TIM_EnableUpdateEvent(TIM1);  // разрешить перезагрузку
+
+  LL_TIM_SetPrescaler(TIM1, 719);  // предделитель = 719 - 10 мкс частота импульсов
+  LL_TIM_SetAutoReload(TIM1, 9999);  // перезагрузка при 9999 - т.е. 10 раз в секунду
+  LL_TIM_SetRepetitionCounter(TIM1, 0);  // без повтора
+
+  LL_TIM_EnableIT_UPDATE(TIM1);  // разрешение прерывания
+
+  NVIC_EnableIRQ (TIM1_UP_IRQn);
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-
+  //LEDs light up
+  //LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
+  //LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_13);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -177,6 +196,14 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  //LL pins config for LEDs:
+  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_12, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_12, LL_GPIO_OUTPUT_PUSHPULL);
+
+  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_13, LL_GPIO_OUTPUT_PUSHPULL);
 
 }
 
