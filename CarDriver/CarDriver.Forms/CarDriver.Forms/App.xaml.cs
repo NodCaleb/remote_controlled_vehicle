@@ -58,8 +58,8 @@ namespace CarDriver.Forms
                 rightValue = rightValue | 0b10000000;
 
                 //Second bit: 0 - forward, 1 - backward
-                leftValue = LeftPower > 0 ? leftValue & 0b10111111 : leftValue | 0b01000000;
-                rightValue = RightPower > 0 ? rightValue & 0b10111111 : rightValue | 0b01000000;
+                leftValue = LeftPower >= 0 ? leftValue & 0b10111111 : leftValue | 0b01000000;
+                rightValue = RightPower >= 0 ? rightValue & 0b10111111 : rightValue | 0b01000000;
 
                 CurrentBluetoothConnection.Transmit(new[] { (byte)leftValue });
                 CurrentBluetoothConnection.Transmit(new[] { (byte)rightValue });
