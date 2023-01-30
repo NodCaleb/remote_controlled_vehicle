@@ -66,6 +66,8 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint8_t direction = 0;
+	uint8_t motor_direction = 0;
 	int32_t CH1_DC = 0;
   /* USER CODE END 1 */
 
@@ -97,24 +99,59 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-	  while(CH1_DC < 65535)
-	  {
-		  TIM2->CCR1 = CH1_DC;
-		  if(CH1_DC < 65535 - 70) TIM2->CCR2 = 65535 - CH1_DC;
-		  else TIM2->CCR2 = 70;
+	  TIM2->CCR1 = CH1_DC;
+	  TIM2->CCR2 = CH1_DC;
 
-		  CH1_DC += 70;
-		  HAL_Delay(1);
-	  }
-	  while(CH1_DC > 0)
+	  if (motor_direction == 0)
 	  {
-		  TIM2->CCR1 = CH1_DC;
-		  TIM2->CCR2 = 65535 - CH1_DC;
-
-		  CH1_DC -= 70;
-		  HAL_Delay(1);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_5);
 	  }
+	  else
+	  {
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_5);
+	  }
+
+	  //65535 = 3 * 5 * 17 * 257
+
+	  if(direction == 0)
+	  {
+		  if (CH1_DC < 65535)
+		  {
+			  CH1_DC += 85; //5 * 17
+		  }
+		  else
+		  {
+			  direction = 1;
+		  }
+	  }
+	  else
+	  {
+		  if (CH1_DC > 0)
+		  {
+			  CH1_DC -= 85; //5 * 17
+		  }
+		  else
+		  {
+			  direction = 0;
+
+			  if(motor_direction == 0)
+			  {
+				  motor_direction = 1;
+			  }
+			  else
+			  {
+				  motor_direction = 0;
+			  }
+		  }
+	  }
+
+	  HAL_Delay(1);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -230,8 +267,17 @@ static void MX_GPIO_Init(void)
 {
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
+  //__HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_2, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_2, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_3, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_4, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_4, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_5, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_5, LL_GPIO_OUTPUT_PUSHPULL);
 
 }
 
