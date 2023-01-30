@@ -40,7 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
+TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 uint8_t leftDriveConfig = 0x00;
 uint8_t rightDriveConfig = 0x80;
@@ -49,6 +49,7 @@ uint8_t rightDriveConfig = 0x80;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -130,18 +131,75 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  //LEDs light up
-  //LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
-  //LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_13);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  uint8_t direction = 0;
+  uint8_t motor_direction = 0;
+  int32_t CH1_DC = 0;
+
   while (1)
   {
     /* USER CODE END WHILE */
+	  TIM2->CCR1 = CH1_DC;
+	  TIM2->CCR2 = CH1_DC;
 
+	  if (motor_direction == 0)
+	  {
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_5);
+	  }
+	  else
+	  {
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_5);
+	  }
+
+	  //65535 = 3 * 5 * 17 * 257
+
+	  if(direction == 0)
+	  {
+		  if (CH1_DC < 65535)
+		  {
+			  CH1_DC += 85; //5 * 17
+		  }
+		  else
+		  {
+			  direction = 1;
+		  }
+	  }
+	  else
+	  {
+		  if (CH1_DC > 0)
+		  {
+			  CH1_DC -= 85; //5 * 17
+		  }
+		  else
+		  {
+			  direction = 0;
+
+			  if(motor_direction == 0)
+			  {
+				  motor_direction = 1;
+			  }
+			  else
+			  {
+				  motor_direction = 0;
+			  }
+		  }
+	  }
+
+	  HAL_Delay(1);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -184,7 +242,68 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 }
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
 
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 65535;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
+
+}
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -194,16 +313,16 @@ static void MX_GPIO_Init(void)
 {
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  //LL pins config for LEDs:
-  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_12, LL_GPIO_MODE_OUTPUT);
-  LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_12, LL_GPIO_OUTPUT_PUSHPULL);
-
-  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_13, LL_GPIO_MODE_OUTPUT);
-  LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_13, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_2, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_2, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_3, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_3, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_4, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_4, LL_GPIO_OUTPUT_PUSHPULL);
+  LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_5, LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinOutputType(GPIOA, LL_GPIO_PIN_5, LL_GPIO_OUTPUT_PUSHPULL);
 
 }
 

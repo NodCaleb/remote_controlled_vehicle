@@ -220,31 +220,31 @@ void USART1_IRQHandler(void) {
 
 void TIM1_UP_IRQHandler(void) {
 
-	//Left indicator (blue)
-	if ((leftDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
-	{
-		if ((leftDriveConfig & 0x3F) > 0x20) //Is there enough power?
-		{
-			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
-		}
-		else
-		{
-			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
-		}
-	}
-
-	//Left indicator (red)
-	if ((rightDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
-	{
-		if ((rightDriveConfig & 0x3F) > 0x20) //Is there enough power?
-		{
-			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_13);
-		}
-		else
-		{
-			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_13);
-		}
-	}
+//	//Left indicator (blue)
+//	if ((leftDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+//	{
+//		if ((leftDriveConfig & 0x3F) > 0x20) //Is there enough power?
+//		{
+//			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
+//		}
+//		else
+//		{
+//			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
+//		}
+//	}
+//
+//	//Left indicator (red)
+//	if ((rightDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+//	{
+//		if ((rightDriveConfig & 0x3F) > 0x20) //Is there enough power?
+//		{
+//			LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_13);
+//		}
+//		else
+//		{
+//			LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_13);
+//		}
+//	}
 
     //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_12); //blinking
     LL_TIM_ClearFlag_UPDATE(TIM1);  // сброс флага прерывания
