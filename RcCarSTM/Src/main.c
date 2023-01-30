@@ -140,66 +140,43 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  uint8_t direction = 0;
-  uint8_t motor_direction = 0;
-  int32_t CH1_DC = 0;
+  int32_t leftPower = 0;
+  int32_t rightPower = 0;
 
   while (1)
   {
-    /* USER CODE END WHILE */
-	  TIM2->CCR1 = CH1_DC;
-	  TIM2->CCR2 = CH1_DC;
+	TIM2->CCR1 = leftPower;
+	TIM2->CCR2 = rightPower;
 
-	  if (motor_direction == 0)
-	  {
-		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
-		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
-		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
-		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_5);
-	  }
-	  else
-	  {
-		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
-		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
-		  LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
-		  LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_5);
-	  }
 
-	  //65535 = 3 * 5 * 17 * 257
+	if ((leftDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+	{
+		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_3);
+	}
+	else
+	{
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_2);
+		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_3);
+	}
 
-	  if(direction == 0)
-	  {
-		  if (CH1_DC < 65535)
-		  {
-			  CH1_DC += 85; //5 * 17
-		  }
-		  else
-		  {
-			  direction = 1;
-		  }
-	  }
-	  else
-	  {
-		  if (CH1_DC > 0)
-		  {
-			  CH1_DC -= 85; //5 * 17
-		  }
-		  else
-		  {
-			  direction = 0;
+	if ((rightDriveConfig & 0x40) == 0x00) //bit 6 == 0 - move forward
+	{
+		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_5);
+	}
+	else
+	{
+		LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_4);
+		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_5);
+	}
 
-			  if(motor_direction == 0)
-			  {
-				  motor_direction = 1;
-			  }
-			  else
-			  {
-				  motor_direction = 0;
-			  }
-		  }
-	  }
+	leftPower = leftDriveConfig & 0x3F;
+	leftPower = leftPower << 10;
 
-	  HAL_Delay(1);
+	rightPower = rightDriveConfig & 0x3F;
+	rightPower = rightPower << 10;
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
