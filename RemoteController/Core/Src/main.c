@@ -49,7 +49,9 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+uint8_t str[4];
+uint16_t millis = 0;
+uint16_t counter_value = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +61,8 @@ static void MX_I2C1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
+
+void Timer_Tick(void);
 
 /* USER CODE END PFP */
 
@@ -100,6 +104,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_TIM_Base_Start_IT(&htim1); // start timer
+
   SSD1306_Init (); // initialize the display
 
 //  SSD1306_GotoXY (10,10); // goto 10, 10
@@ -123,9 +129,15 @@ int main(void)
 
   //SSD1306_DrawRectangle(2, 0, 128, 64, SSD1306_COLOR_WHITE);
 
-  SSD1306_DrawBitmap(2, 0 , throttle, 32, 32, 1);
+  //SSD1306_DrawBitmap(2, 0 , throttle, 32, 32, 1);
 
-  SSD1306_UpdateScreen();
+//  sprintf(&str, "%4d", value);
+//
+//  SSD1306_GotoXY(2, 0);
+//  SSD1306_Puts (str, &Font_7x10, 1);
+//
+//
+//  SSD1306_UpdateScreen();
 
   /* USER CODE END 2 */
 
@@ -308,6 +320,35 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+//Process timer interrupts
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+
+	if(htim == &htim1){ //Check if it's TIM1
+		millis++;
+		if (millis == 100){
+			millis = 0;
+			Timer_Tick();
+		}
+	}
+}
+
+//Ticks once per second
+void Timer_Tick(void){
+
+//	USART1->DR = 0x2E; //Send char '.' to UART (to test that UART and timer work)
+
+	counter_value++;
+	if (counter_value > 3600) counter_value = 0;
+
+	sprintf(&str, "%4d", counter_value);
+
+	SSD1306_GotoXY(2, 0);
+	SSD1306_Puts (str, &Font_7x10, 1);
+
+
+	SSD1306_UpdateScreen();
+}
 
 /* USER CODE END 4 */
 
