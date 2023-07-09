@@ -9,3 +9,6 @@
 [L298N connection](https://3d-diy.ru/wiki/arduino-moduli/drayver-dvigatelya-l298n/)
 
 [Curquit diagram] (https://www.circuit-diagram.org/editor/c/aaef9640fd4448a2b966cde417a74649)
+
+[Using OLED display with STM32] https://controllerstech.com/oled-display-using-i2c-stm32/
+First and last pixels coordinates: (2,0), (129,63).
