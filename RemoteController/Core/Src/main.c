@@ -34,7 +34,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define VREF 3.3065
+#define read_adc_period 100
+#define update_screen_period 100
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,11 +53,16 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-float res;
+//Counters for timed actions, initial values - time offsets
+uint16_t read_adc_counter = 0;
+uint16_t update_screen_counter = 50;
+
 uint8_t str[32];
-uint16_t millis = 0;
-uint16_t counter_value = 0;
 uint32_t adc_value[2];
+
+uint16_t left_throttle = 0;
+uint16_t right_throttle = 0;
+SSD1306_COLOR_t draw_color = SSD1306_COLOR_BLACK;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,7 +74,9 @@ static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
-void Timer_Tick(void);
+void Read_ADC(void);
+void Calculate_Throttle(void);
+void Update_Screen(void);
 void Select_ADC_Channel(uint8_t channel);
 
 /* USER CODE END PFP */
@@ -398,16 +406,25 @@ static void MX_GPIO_Init(void)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	if(htim == &htim1){ //Check if it's TIM1
-		millis++;
-		if (millis == 100){
-			millis = 0;
-			Timer_Tick();
+		
+    read_adc_counter++;
+    update_screen_counter++;
+		
+    if (read_adc_counter == read_adc_period){
+			read_adc_counter = 0;
+			Read_ADC();
+      Calculate_Throttle();
+		}
+		
+    if (update_screen_counter == update_screen_period){
+			update_screen_counter = 0;
+			Update_Screen();
 		}
 	}
 }
 
 //Ticks once per second
-void Timer_Tick(void){
+void Read_ADC(void){
 
 //	USART1->DR = 0x2E; //Send char '.' to UART (to test that UART and timer work)
 
@@ -417,17 +434,7 @@ void Timer_Tick(void){
     HAL_ADC_Start(&hadc1);
     HAL_ADC_PollForConversion(&hadc1, 10);
     adc_value[i] = HAL_ADC_GetValue(&hadc1);
-
-    sprintf(&str, "%4d", adc_value[i]);
-
-    SSD1306_GotoXY(2, i * 10);
-    SSD1306_Puts (str, &Font_7x10, 1);
-
-    SSD1306_UpdateScreen();
-
   }
-
-
 
 }
 
@@ -457,6 +464,91 @@ void Select_ADC_Channel(uint8_t channel){
 	{
 		Error_Handler();
 	}
+
+}
+
+void Calculate_Throttle(void){
+  left_throttle = adc_value[0] / 64;
+  right_throttle = adc_value[1] / 64;
+}
+
+void Update_Screen(void){
+  
+  // for (size_t i = 0; i < 2; i++)
+  // {
+  //   sprintf(&str, "%4d", adc_value[i]);
+
+  //   SSD1306_GotoXY(2, i * 10);
+  //   SSD1306_Puts (str, &Font_7x10, 1);
+
+  //   SSD1306_UpdateScreen();
+  // }
+  
+  // SSD1306_DrawBitmap(2, 0 , throttle, 32, 32, 1);
+  // SSD1306_DrawFilledRectangle(2, 0, 32, 12, SSD1306_COLOR_BLACK);
+
+  for (size_t i = 0; i < 64; i++)
+  {
+    if (left_throttle < 32)
+    {
+      if (left_throttle <= i && i <= 32)
+      {
+        draw_color = SSD1306_COLOR_WHITE;
+      }
+      else{
+        draw_color = SSD1306_COLOR_BLACK;
+      }
+    }
+    else if (left_throttle > 32)
+    {
+      if (left_throttle >= i && i > 32)
+      {
+        draw_color = SSD1306_COLOR_WHITE;
+      }
+      else{
+        draw_color = SSD1306_COLOR_BLACK;
+      }
+    }
+    else
+    {
+      draw_color = SSD1306_COLOR_BLACK;
+    }    
+
+    SSD1306_DrawLine(2, i, 16, i, draw_color);
+
+    if (right_throttle < 32)
+    {
+      if (right_throttle <= i && i <= 32)
+      {
+        draw_color = SSD1306_COLOR_WHITE;
+      }
+      else{
+        draw_color = SSD1306_COLOR_BLACK;
+      }
+    }
+    else if (right_throttle > 32)
+    {
+      if (right_throttle >= i && i > 32)
+      {
+        draw_color = SSD1306_COLOR_WHITE;
+      }
+      else{
+        draw_color = SSD1306_COLOR_BLACK;
+      }
+    }
+    else
+    {
+      draw_color = SSD1306_COLOR_BLACK;
+    }    
+
+    SSD1306_DrawLine(113, i, 129, i, draw_color);
+  }
+
+    // sprintf(&str, "%4d", left_throttle);
+    // SSD1306_GotoXY(2, 0);
+    // SSD1306_Puts (str, &Font_7x10, 1);  
+  
+  SSD1306_UpdateScreen();
 
 }
 
