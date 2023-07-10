@@ -56,7 +56,7 @@ float res;
 uint8_t str[32];
 uint16_t millis = 0;
 uint16_t counter_value = 0;
-uint32_t channel_0 = 0;
+uint32_t adc_value[2];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,6 +69,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
 void Timer_Tick(void);
+void Select_ADC_Channel(uint8_t channel);
 
 /* USER CODE END PFP */
 
@@ -113,7 +114,7 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim1); // start timer
   HAL_ADCEx_Calibration_Start(&hadc1); //Calibrate ADC
-  HAL_ADC_Start(&hadc1);
+  // HAL_ADC_Start(&hadc1);
 
   SSD1306_Init (); // initialize the display
 
@@ -228,7 +229,7 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -241,13 +242,22 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//  sConfig.Channel = ADC_CHANNEL_0;
+//  sConfig.Rank = ADC_REGULAR_RANK_1;
+//  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
+//  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+
+  /** Configure Regular Channel
+  */
+//  sConfig.Channel = ADC_CHANNEL_1;
+//  sConfig.Rank = ADC_REGULAR_RANK_2;
+//  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
@@ -401,24 +411,53 @@ void Timer_Tick(void){
 
 //	USART1->DR = 0x2E; //Send char '.' to UART (to test that UART and timer work)
 
-//	HAL_ADC_Start(&hadc1);
-//	HAL_ADC_PollForConversion(&hadc1, 10);
+  for (size_t i = 0; i < 2; i++)
+  {
+    Select_ADC_Channel(i);
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, 10);
+    adc_value[i] = HAL_ADC_GetValue(&hadc1);
 
-	channel_0 = HAL_ADC_GetValue(&hadc1);
+    sprintf(&str, "%4d", adc_value[i]);
 
-//	counter_value++;
-//	if (counter_value > 3600) counter_value = 0;
+    SSD1306_GotoXY(2, i * 10);
+    SSD1306_Puts (str, &Font_7x10, 1);
 
-//	res= (float)HAL_ADC_GetValue(&hadc1) * VREF / 4096. ;
-//	sprintf((char *)str, "%d.%03d V", (uint16_t)res, ((uint16_t)((res - (uint16_t)res)*1000.)) );
+    SSD1306_UpdateScreen();
 
-	sprintf(&str, "%4d", channel_0);
-
-	SSD1306_GotoXY(2, 0);
-	SSD1306_Puts (str, &Font_7x10, 1);
+  }
 
 
-	SSD1306_UpdateScreen();
+
+}
+
+//Selecting ADC channel
+void Select_ADC_Channel(uint8_t channel){
+
+	ADC_ChannelConfTypeDef sConfig = {0};
+  sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES_5;
+
+  switch (channel)
+  {
+    case 0:
+      sConfig.Channel = ADC_CHANNEL_0;
+      break;
+    case 1:
+      sConfig.Channel = ADC_CHANNEL_1;
+      break;
+    
+    default:
+      break;
+  }
+
+	
+	
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
 }
 
 /* USER CODE END 4 */
