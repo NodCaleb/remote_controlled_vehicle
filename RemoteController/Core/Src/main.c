@@ -147,7 +147,7 @@ int main(void)
 
   //SSD1306_DrawRectangle(2, 0, 128, 64, SSD1306_COLOR_WHITE);
 
-  //SSD1306_DrawBitmap(2, 0 , throttle, 32, 32, 1);
+  SSD1306_DrawBitmap(43, 17 , car, 48, 35, 1);
 
 //  sprintf(&str, "%4d", value);
 //
@@ -155,7 +155,7 @@ int main(void)
 //  SSD1306_Puts (str, &Font_7x10, 1);
 //
 //
-//  SSD1306_UpdateScreen();
+  SSD1306_UpdateScreen();
 
   /* USER CODE END 2 */
 
