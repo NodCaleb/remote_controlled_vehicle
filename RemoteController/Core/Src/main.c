@@ -62,6 +62,9 @@ uint32_t adc_value[2];
 
 uint16_t left_throttle = 0;
 uint16_t right_throttle = 0;
+uint8_t left_transmit = 0;
+uint8_t right_transmit = 0;
+uint8_t transmit_switch = 0; //Left or right throttle
 SSD1306_COLOR_t draw_color = SSD1306_COLOR_BLACK;
 /* USER CODE END PV */
 
@@ -77,6 +80,7 @@ static void MX_ADC1_Init(void);
 void Read_ADC(void);
 void Calculate_Throttle(void);
 void Update_Screen(void);
+void Transmit_Throttle(uint8_t throttle);
 void Select_ADC_Channel(uint8_t channel);
 
 /* USER CODE END PFP */
@@ -120,41 +124,15 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
+  USART1->DR = 0x2E;
+
   HAL_TIM_Base_Start_IT(&htim1); // start timer
   HAL_ADCEx_Calibration_Start(&hadc1); //Calibrate ADC
-  // HAL_ADC_Start(&hadc1);
 
   SSD1306_Init (); // initialize the display
 
-//  SSD1306_GotoXY (10,10); // goto 10, 10
-//  SSD1306_Puts ("HELLO", &Font_11x18, 1); // print Hello
-//  SSD1306_GotoXY (10, 30);
-//  SSD1306_Puts ("WORLD !!", &Font_11x18, 1);
-//  SSD1306_UpdateScreen(); // update screen
-//
-//  HAL_Delay (2000);
-//
-//  SSD1306_Fill(SSD1306_COLOR_WHITE);
-
-//  for (int i = 0; i < 10; i++) {
-//	  SSD1306_DrawPixel(i, i * 2, SSD1306_COLOR_WHITE);
-//  }
-
-//  SSD1306_DrawPixel(2, 0, SSD1306_COLOR_WHITE);
-//  SSD1306_DrawPixel(2, 63, SSD1306_COLOR_WHITE);
-//  SSD1306_DrawPixel(129, 0, SSD1306_COLOR_WHITE);
-//  SSD1306_DrawPixel(129, 63, SSD1306_COLOR_WHITE);
-
-  //SSD1306_DrawRectangle(2, 0, 128, 64, SSD1306_COLOR_WHITE);
-
   SSD1306_DrawBitmap(43, 17 , car, 48, 35, 1);
-
-//  sprintf(&str, "%4d", value);
-//
-//  SSD1306_GotoXY(2, 0);
-//  SSD1306_Puts (str, &Font_7x10, 1);
-//
-//
+  
   SSD1306_UpdateScreen();
 
   /* USER CODE END 2 */
@@ -419,6 +397,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if (update_screen_counter == update_screen_period){
 			update_screen_counter = 0;
 			Update_Screen();
+      if (transmit_switch == 0)
+      {
+        transmit_switch = 1;
+        Transmit_Throttle(left_transmit);
+      }
+      else{
+        transmit_switch = 0;
+        Transmit_Throttle(right_transmit);
+      }
 		}
 	}
 }
@@ -470,6 +457,29 @@ void Select_ADC_Channel(uint8_t channel){
 void Calculate_Throttle(void){
   left_throttle = adc_value[0] / 64;
   right_throttle = adc_value[1] / 64;
+
+  if (adc_value[0] >= 2048) //Left forward
+  {
+    left_transmit = ((adc_value[0] - 2048) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
+    left_transmit = left_transmit & 0x3F; //Set direction bit + motor index
+  }
+  else{ //Left reverse
+    left_transmit = (adc_value[0] / 8) >> 2;
+    left_transmit = left_transmit | 0x40; //Set direction bit
+    left_transmit = left_transmit & 0x7F; //Set motor index
+  }
+
+  if (adc_value[1] >= 2048) //Right forward
+  {
+    right_transmit = ((adc_value[1] - 2048) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
+    right_transmit = right_transmit | 0x80; //Set direction bit
+    right_transmit = right_transmit & 0xBF; //Set motor index
+  }
+  else{ //Right reverse
+    right_transmit = (adc_value[1] / 8) >> 2;
+    right_transmit = right_transmit | 0xC0; //Set direction bit + motor index
+  }
+  
 }
 
 void Update_Screen(void){
@@ -544,12 +554,17 @@ void Update_Screen(void){
     SSD1306_DrawLine(113, i, 129, i, draw_color);
   }
 
+  
     // sprintf(&str, "%4d", left_throttle);
     // SSD1306_GotoXY(2, 0);
     // SSD1306_Puts (str, &Font_7x10, 1);  
   
   SSD1306_UpdateScreen();
 
+}
+
+void Transmit_Throttle(uint8_t throttle){
+  USART1->DR = throttle;
 }
 
 /* USER CODE END 4 */
