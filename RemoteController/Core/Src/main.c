@@ -457,52 +457,81 @@ void Select_ADC_Channel(uint8_t channel){
 
 void Calculate_Throttle(void){
 
-  if (adc_value[0] >= 2048) //Left forward
+  //Calculate values for transmission
+  if (adc_value[0] < 2048) //Left forward
   {
-    left_transmit = ((adc_value[0] - 2048) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
-    left_transmit = left_transmit & 0x3F; //Set direction bit + motor index
+    left_transmit = ((2047 - adc_value[0]) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
+    if (left_transmit < 16) //Reduce noise
+    {
+      left_transmit = 0;
+    }
+    
+    left_transmit = left_transmit & 0x7F; //Set motor index
+    left_transmit = left_transmit & 0xBF; //Set direction bit
   }
   else{ //Left reverse
-    left_transmit = (adc_value[0] / 8) >> 2;
-    left_transmit = left_transmit | 0x40; //Set direction bit
+    left_transmit = ((adc_value[0] - 2048) / 8) >> 2;
+    if (left_transmit < 16) //Reduce noise
+    {
+      left_transmit = 0;
+    }
+
     left_transmit = left_transmit & 0x7F; //Set motor index
+    left_transmit = left_transmit | 0x40; //Set direction bit
   }
 
-  if (adc_value[1] >= 2048) //Right forward
+  if (adc_value[1] < 2048) //Right forward
   {
-    right_transmit = ((adc_value[1] - 2048) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
-    right_transmit = right_transmit | 0x80; //Set direction bit
-    right_transmit = right_transmit & 0xBF; //Set motor index
+    right_transmit = ((2047 - adc_value[1]) / 8) >> 2; //Reduce definition by 2 digits to contain motor index and direction
+    if (right_transmit < 16) //Reduce noise
+    {
+      right_transmit = 0;
+    }
+
+    right_transmit = right_transmit | 0x80; //Set motor index
+    right_transmit = right_transmit & 0xBF; //Set direction bit
   }
   else{ //Right reverse
-    right_transmit = (adc_value[1] / 8) >> 2;
-    right_transmit = right_transmit | 0xC0; //Set direction bit + motor index
+    right_transmit = ((adc_value[1] - 2048) / 8) >> 2;
+    if (right_transmit < 16) //Reduce noise
+    {
+      right_transmit = 0;
+    }
+
+    right_transmit = right_transmit | 0x80; //Set motor index
+    right_transmit = right_transmit | 0x40; //Set direction bit
   }
 
   //Calculate values to show on screen
-  left_throttle = left_transmit ^ 1 << 6; //Toggle 6th bit cause displayed values should be more for forward direction
-  left_throttle = left_throttle >> 1; //Shift right to reduce scale from 128 to 64 for full throttle
-  right_throttle = right_transmit ^ 1 << 6;
-  right_throttle = right_throttle & 0x7F; //Set most significant bit to 0 cause motor indes is not being used on the display
-  right_throttle = right_throttle >> 1;
+  left_throttle = adc_value[0] / 64;
+  right_throttle = adc_value[1] / 64;
+  // left_throttle = left_transmit ^ 1 << 6; //Toggle 6th bit cause displayed values should be more for forward direction
+  // left_throttle = left_throttle >> 1; //Shift right to reduce scale from 128 to 64 for full throttle
+  // right_throttle = right_transmit ^ 1 << 6;
+  // right_throttle = right_throttle & 0x7F; //Set most significant bit to 0 cause motor indes is not being used on the display
+  // right_throttle = right_throttle >> 1;
   
 }
 
 void Update_Screen(void){
   
+  //Display numeric values (for debug)
   // for (size_t i = 0; i < 2; i++)
   // {
   //   sprintf(&str, "%4d", adc_value[i]);
-
   //   SSD1306_GotoXY(2, i * 10);
   //   SSD1306_Puts (str, &Font_7x10, 1);
-
-  //   SSD1306_UpdateScreen();
   // }
-  
-  // SSD1306_DrawBitmap(2, 0 , throttle, 32, 32, 1);
-  // SSD1306_DrawFilledRectangle(2, 0, 32, 12, SSD1306_COLOR_BLACK);
 
+  // sprintf(&str, "%4d", left_transmit);
+  // SSD1306_GotoXY(2, 30);
+  // SSD1306_Puts (str, &Font_7x10, 1);
+
+  // sprintf(&str, "%4d", right_transmit);
+  // SSD1306_GotoXY(2, 40);
+  // SSD1306_Puts (str, &Font_7x10, 1);
+  
+  //Draw left and right throttle bars (for fancy look)
   for (size_t i = 0; i < 64; i++)
   {
     if (left_throttle < 32)
@@ -559,11 +588,6 @@ void Update_Screen(void){
 
     SSD1306_DrawLine(113, i, 129, i, draw_color);
   }
-
-  
-    // sprintf(&str, "%4d", left_throttle);
-    // SSD1306_GotoXY(2, 0);
-    // SSD1306_Puts (str, &Font_7x10, 1);  
   
   SSD1306_UpdateScreen();
 
