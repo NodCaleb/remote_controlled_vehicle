@@ -397,6 +397,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if (update_screen_counter == update_screen_period){
 			update_screen_counter = 0;
 			Update_Screen();
+      //Transmit values alternately
       if (transmit_switch == 0)
       {
         transmit_switch = 1;
@@ -455,8 +456,6 @@ void Select_ADC_Channel(uint8_t channel){
 }
 
 void Calculate_Throttle(void){
-  left_throttle = adc_value[0] / 64;
-  right_throttle = adc_value[1] / 64;
 
   if (adc_value[0] >= 2048) //Left forward
   {
@@ -479,6 +478,13 @@ void Calculate_Throttle(void){
     right_transmit = (adc_value[1] / 8) >> 2;
     right_transmit = right_transmit | 0xC0; //Set direction bit + motor index
   }
+
+  //Calculate values to show on screen
+  left_throttle = left_transmit ^ 1 << 6; //Toggle 6th bit cause displayed values should be more for forward direction
+  left_throttle = left_throttle >> 1; //Shift right to reduce scale from 128 to 64 for full throttle
+  right_throttle = right_transmit ^ 1 << 6;
+  right_throttle = right_throttle & 0x7F; //Set most significant bit to 0 cause motor indes is not being used on the display
+  right_throttle = right_throttle >> 1;
   
 }
 
