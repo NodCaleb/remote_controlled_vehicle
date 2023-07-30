@@ -12,3 +12,12 @@
 
 [Using OLED display with STM32] https://controllerstech.com/oled-display-using-i2c-stm32/
 First and last pixels coordinates: (2,0), (129,63).
+
+##Wiring RC
+
+A0 - Left joystick x
+A1 - Right joustick x
+A9 - UART TX to BT RX
+A0 - UART RX to BT TX
+B6 - Screen SCK
+B7 - Screen SDA
